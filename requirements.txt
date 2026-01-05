@@ -1,0 +1,55 @@
+# -------------------------
+# Core runtime
+# -------------------------
+python-dotenv==1.0.1
+typing-extensions==4.9.0
+
+# -------------------------
+# CrewAI stack
+# -------------------------
+crewai==0.35.8
+crewai-tools==0.4.6
+
+# CrewAI hard constraints
+langchain==0.1.20
+langchain-community==0.0.38
+langchain-core==0.1.53
+
+regex==2023.12.25
+
+# -------------------------
+# LLM / API
+# -------------------------
+google-generativeai==0.5.4
+tenacity==8.2.3
+
+# -------------------------
+# Embeddings / NLP
+# -------------------------
+spacy==3.7.2
+thinc==8.2.2
+numpy==1.26.4
+
+# -------------------------
+# Scraping / Search
+# -------------------------
+scrapy==2.11.1
+playwright==1.41.2
+requests==2.31.0
+beautifulsoup4==4.12.3
+lxml==5.1.0
+
+# SERP API
+google-search-results==2.4.2
+
+# -------------------------
+# Utilities
+# -------------------------
+tqdm==4.66.2
+orjson==3.9.15
+
+# FASTAPI + UVICORN + ngrok
+
+fastapi==0.110.0
+uvicorn[standard]=0.27.1
+pyngrok==7.1.6
