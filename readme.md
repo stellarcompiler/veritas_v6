@@ -84,6 +84,7 @@ redis-server
 
 python -m venv venv
 venv\Scripts\activate
+python -m pip install --upgrade pip==23.3.2
 pip install -r requirements.txt
 
 
