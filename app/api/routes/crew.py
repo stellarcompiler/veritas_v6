@@ -1,4 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import StreamingResponse
+import asyncio
+import httpx
 import uuid, json
 from app.schemas.requests import CrewStartRequest
 from app.schemas.responses import CrewStartResponse
@@ -9,7 +12,20 @@ from app.core.redis_utils import redis_safe_mapping
 router = APIRouter(prefix="/crew", tags=["crew"])
 
 @router.post("/start", response_model=CrewStartResponse)
-def start_crew(req: CrewStartRequest):
+async def start_crew(request: Request):
+    try:
+        data = await request.json()
+        # Handle n8n's wrapping or stringified payloads
+        if isinstance(data, dict) and "body" in data:
+            if isinstance(data["body"], str):
+                data = json.loads(data["body"])
+            elif isinstance(data["body"], dict):
+                data = data["body"]
+        # Validate payload using your existing schema
+        req = CrewStartRequest(**data)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"Invalid request format: {e}")
+
     job_id = str(uuid.uuid4())
 
     redis_client.hset(
@@ -42,6 +58,25 @@ def poll_status(job_id: str):
         "logs": logs
     }
 
+WEBHOOK_URL = "https://n8n-production-62ab.up.railway.app/webhook-test/crew-log"
+
+@router.get("/stream/{job_id}")
+async def stream_logs(job_id: str):
+    last_count = 0
+    while True:
+        logs = redis_client.lrange(f"job:{job_id}:logs", 0, -1)
+        if len(logs) > last_count:
+            new_logs = logs[last_count:]
+            last_count = len(logs)
+
+            # Push logs to n8n webhook
+            async with httpx.AsyncClient() as client:
+                await client.post(WEBHOOK_URL, json={
+                    "job_id": job_id,
+                    "new_logs": new_logs
+                })
+
+        await asyncio.sleep(10)
 
 @router.get("/result/{job_id}")
 def get_result(job_id: str):

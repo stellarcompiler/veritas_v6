@@ -33,7 +33,11 @@ numpy==1.26.4
 # -------------------------
 # Scraping / Search
 # -------------------------
-scrapy==2.11.1
+trafilatura==1.6.4
+newspaper3k==0.2.8
+beautifulsoup4==4.12.3
+readability-lxml==0.8.1
+
 playwright==1.41.2
 requests==2.31.0
 beautifulsoup4==4.12.3
