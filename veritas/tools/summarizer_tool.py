@@ -9,7 +9,7 @@ try:
     llm_summarizer = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
         temperature=0.1,
-        google_api_key= Config.GOOGLE_API_KEY2
+        google_api_key= "AIzaSyArW4QqIsl7BycwEQk0Bmie7om61tujgV4"
     )
     logger.info("Summarizer LLM initialized successfully")
 except Exception as e:

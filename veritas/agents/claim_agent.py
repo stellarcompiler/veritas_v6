@@ -7,10 +7,10 @@ from veritas.config import Config, logger
 try:
     # Initialize LLM with error handling
     llm = ChatGoogleGenerativeAI(
-        model= "gemma-3-12b-it",
+        model= "gemma-3-27b-it",
         temperature= 0.1,
         verbose=Config.VERBOSE_STATE,
-        google_api_key=Config.GOOGLE_API_KEY
+        google_api_key="AIzaSyDTyWWxQpPadx1tIhsVY5-Gh8IEt1KfzNw"
     )
     
     claim_agent = Agent(

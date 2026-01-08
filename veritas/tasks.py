@@ -58,7 +58,7 @@ def create_research_task(claim_text: str, context_task: Task, job_id: str) -> Ta
             "- Example: claim='Biden tariffs China' → query='Biden China tariffs'\n"
             "- Keep query short (3-5 words)\n\n"
             "STEP 3: SEARCH\n"
-            "- Call serp_search_tool(query, job_id)\n"
+            "- Call serp_search_tool(query, job_id) ONLY ONCE\n"
             "- Get 2 URLs from results\n"
             "- Pick credible sources: reuters.com, bbc.com, apnews.com, etc.\n\n"
             "STEP 4: SCRAPE (MAX 2 SITES)\n"
