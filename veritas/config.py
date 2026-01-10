@@ -18,6 +18,8 @@ class Config:
     # AI Models
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
     GOOGLE_API_KEY2 = os.getenv("GOOGLE_API_KEY2")
+    GOOGLE_API_KEY3 = os.getenv("GOOGLE_API_KEY3")
+    GOOGLE_API_KEY4= os.getenv("GOOGLE_API_KEYS4")
     MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.5-flash")
     OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma3:1b")
     VERBOSE_STATE = os.getenv("VERBOSE_STATE", "False")

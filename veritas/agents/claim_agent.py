@@ -10,7 +10,7 @@ try:
         model= "gemma-3-27b-it",
         temperature= 0.1,
         verbose=Config.VERBOSE_STATE,
-        google_api_key="AIzaSyDTyWWxQpPadx1tIhsVY5-Gh8IEt1KfzNw"
+        google_api_key=Config.GOOGLE_API_KEY3
     )
     
     claim_agent = Agent(

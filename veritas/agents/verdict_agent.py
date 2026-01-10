@@ -1,6 +1,7 @@
 from crewai import Agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 from veritas.config import Config, logger
+from app.services.telemetry import log_event
 
 try:
     # Initialize LLM with higher temperature for better reasoning

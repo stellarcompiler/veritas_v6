@@ -2,9 +2,10 @@ import json
 from crewai_tools import tool
 from serpapi import GoogleSearch
 from veritas.config import Config, logger
+from app.services.telemetry import log_event
 
 @tool("serp_search_tool")
-def serp_search_tool(query: str) -> str:
+def serp_search_tool(query: str, job_id: str) -> str:
     """
     Search Google for the given query and return top 2 results prioritizing 
     news sources and fact-checking sites.
@@ -44,7 +45,6 @@ def serp_search_tool(query: str) -> str:
             "q": query,
             "api_key": Config.SERPAPI_API_KEY,
             "num": 2,  # Changed from 5 to 2 as requested
-            "gl": "us",
             "hl": "en",
             "tbm": "nws"  # Focus on news results
         }
@@ -55,6 +55,13 @@ def serp_search_tool(query: str) -> str:
             results = search.get_dict()
         except Exception as search_error:
             logger.error(f"SERP API request failed: {search_error}")
+            log_event(
+                    job_id=job_id,
+                    source= "SERP API TOOL",
+                    event_type= "FAILURE",
+                    message="Search request Failed",
+                    meta={"Tool": "search_tool"}
+                )
             return json.dumps({
                 "error": f"Search request failed: {str(search_error)}",
                 "results": []
@@ -74,7 +81,7 @@ def serp_search_tool(query: str) -> str:
         priority_domains = [
             'snopes.com', 'politifact.com', 'factcheck.org', 
             'reuters.com', 'apnews.com', 'bbc.com', 'npr.org',
-            'nytimes.com', 'washingtonpost.com', 'theguardian.com'
+            'nytimes.com', 'washingtonpost.com', 'theguardian.com', 'timesofindia.com'
         ]
 
         # Extract News Results
@@ -137,6 +144,13 @@ def serp_search_tool(query: str) -> str:
             })
         
         logger.info(f"Found {len(cleaned_results)} search results")
+        log_event(
+                    job_id=job_id,
+                    source= "SERP API Tool",
+                    event_type= "SUCCEED",
+                    message="Search Querying Successful",
+                    meta={"Tool": "search_tool(SERP)"}
+                )
         return json.dumps({
             "results": cleaned_results,
             "total": len(cleaned_results),
@@ -146,6 +160,13 @@ def serp_search_tool(query: str) -> str:
 
     except Exception as e:
         logger.error(f"Unexpected error in SERP search: {e}", exc_info=True)
+        log_event(
+                    job_id=job_id,
+                    source= "SERP API TOOL",
+                    event_type= "FAILURE",
+                    message="Search request Failed",
+                    meta={"Tool": "search_tool"}
+                )
         return json.dumps({
             "error": f"Search failed: {str(e)}",
             "results": [],

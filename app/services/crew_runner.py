@@ -18,7 +18,8 @@ from app.core.redis_utils import redis_safe_mapping
 from app.services.telemetry import (
     increment_claims,
     increment_jobs_completed,
-    increment_jobs_failed
+    increment_jobs_failed,
+    log_event
 )
 
 
@@ -73,7 +74,13 @@ def run_crew_blocking(claim: str, job_id: str) -> None:
         print("[CREW] About to kickoff CrewAI")
         result = crew.kickoff()
         print("[CREW] CrewAI finished")
-
+        log_event(
+                    job_id=job_id,
+                    source= "VERDICT AGENT",
+                    event_type= "END",
+                    message="VERDICT GENERATED",
+                    meta={"ORIGIN": "VERDICT AGENT"}
+                )
         redis_client.set(
             f"job:{job_id}:result",
             json.dumps(result)
@@ -92,7 +99,13 @@ def run_crew_blocking(claim: str, job_id: str) -> None:
 
     except Exception as e:
         traceback.print_exc()
-
+        log_event(
+                    job_id=job_id,
+                    source= "VERDICT AGENT",
+                    event_type= "FAILED",
+                    message="VERDICT GENERATION FAILED",
+                    meta={"ORIGIN" : "VERDICT AGENT"}
+                )
         redis_client.hset(
             f"job:{job_id}:status",
             mapping=redis_safe_mapping({

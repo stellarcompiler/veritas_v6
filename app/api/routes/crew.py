@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
+from sse_starlette.sse import EventSourceResponse
 import asyncio
 import httpx
 import uuid, json
@@ -36,6 +37,14 @@ async def start_crew(request: Request):
         })
     )
 
+    redis_client.rpush(
+    f"job:{job_id}:logs",
+    json.dumps({
+        "event": "system",
+        "message": "job_created"
+    })
+)
+
     start_crew_process(req.claim, job_id)
 
     return {
@@ -58,25 +67,59 @@ def poll_status(job_id: str):
         "logs": logs
     }
 
-WEBHOOK_URL = "https://n8n-production-62ab.up.railway.app/webhook-test/crew-log"
 
 @router.get("/stream/{job_id}")
-async def stream_logs(job_id: str):
-    last_count = 0
-    while True:
-        logs = redis_client.lrange(f"job:{job_id}:logs", 0, -1)
-        if len(logs) > last_count:
-            new_logs = logs[last_count:]
-            last_count = len(logs)
+async def stream(job_id: str):
 
-            # Push logs to n8n webhook
-            async with httpx.AsyncClient() as client:
-                await client.post(WEBHOOK_URL, json={
-                    "job_id": job_id,
-                    "new_logs": new_logs
-                })
+    async def event_generator():
+        last_count = 0
 
-        await asyncio.sleep(10)
+        # 🔒 NEVER EXIT unless job is completed
+        while True:
+            # job existence check (soft)
+            status = redis_client.hgetall(f"job:{job_id}:status")
+
+            if not status:
+                # 🔥 IMPORTANT: do NOT 404
+                yield {
+                    "event": "heartbeat",
+                    "data": "waiting_for_job"
+                }
+                await asyncio.sleep(1)
+                continue
+
+            logs = redis_client.lrange(f"job:{job_id}:logs", 0, -1)
+
+            if len(logs) > last_count:
+                new_logs = logs[last_count:]
+                last_count = len(logs)
+
+                for raw in new_logs:
+                    log = raw.decode() if isinstance(raw, bytes) else raw
+
+                    yield {
+                        "event": "log",
+                        "data": log
+                    }
+
+                    # Optional: detect completion signal
+                    if '"verdict"' in log:
+                        yield {
+                            "event": "done",
+                            "data": "completed"
+                        }
+                        return  # graceful close
+
+            # 🔹 Heartbeat (keeps frontend alive)
+            yield {
+                "event": "heartbeat",
+                "data": "alive"
+            }
+
+            await asyncio.sleep(1)
+
+    return EventSourceResponse(event_generator())
+
 
 @router.get("/result/{job_id}")
 def get_result(job_id: str):

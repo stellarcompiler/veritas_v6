@@ -8,20 +8,20 @@ from datetime import datetime
 from dateutil.parser import parse as parse_date
 import json
 import re
-
+from app.services.telemetry import  log_event
 # ---------------- CONFIG ---------------- #
 
 TIMEOUT = 12
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 
 MIN_CONTENT_LENGTH = 200
-MAX_CONTENT_CHARS = 2500     # HARD CAP for agent context safety
+MAX_CONTENT_CHARS = 1000     # HARD CAP for agent context safety
 MIN_TRUNCATED_CHARS = 800    # Avoid useless stubs
 
 # --------------------------------------- #
 
 @tool("web_scraper_tool")
-def web_scraper_tool(url: str) -> dict:
+def web_scraper_tool(url: str, job_id: str) -> dict:
     """
     CrewAI-safe web scraper with context-token protection.
     Returns TRUNCATED article content optimized for LLM agents.
@@ -63,7 +63,13 @@ def web_scraper_tool(url: str) -> dict:
 
             if len(content) >= MIN_CONTENT_LENGTH:
                 content = truncate_content(content)
-
+                log_event(
+                    job_id=job_id,
+                    source= "Multi-WebScraping TOOL",
+                    event_type= "SUCCEED",
+                    message="Successfully Scraped URL",
+                    meta={"Framework": "Trafilatura"}
+                )
                 return {
                     "url": url,
                     "scraped_successfully": True,
@@ -91,7 +97,13 @@ def web_scraper_tool(url: str) -> dict:
 
         if article.text and len(article.text) >= MIN_CONTENT_LENGTH:
             content = truncate_content(article.text)
-
+            log_event(
+                    job_id=job_id,
+                    source= "Multi-WebScraping TOOL",
+                    event_type= "SUCCEED",
+                    message="Successfully Scraped URL",
+                    meta={"Framework": "Newspaper3k"}
+                )
             return {
                 "url": url,
                 "scraped_successfully": True,
@@ -115,7 +127,13 @@ def web_scraper_tool(url: str) -> dict:
 
         if len(text) >= MIN_CONTENT_LENGTH:
             content = truncate_content(text)
-
+            log_event(
+                    job_id=job_id,
+                    source= "Multi-WebScraping TOOL",
+                    event_type= "SUCCEED",
+                    message="Successfully Scraped URL",
+                    meta={"Framework": "Readability"}
+                )
             return {
                 "url": url,
                 "scraped_successfully": True,
